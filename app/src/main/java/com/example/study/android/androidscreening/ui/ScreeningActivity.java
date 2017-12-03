@@ -1,5 +1,6 @@
 package com.example.study.android.androidscreening.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -9,9 +10,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.study.android.androidscreening.R;
+import com.example.study.android.androidscreening.main.MainActivity;
 
 
-public class ScreeningActivity extends AppCompatActivity {
+public class ScreeningActivity extends AppCompatActivity implements View.OnClickListener{
 //http://www.jianshu.com/p/e4c972ca6c94#
     private DrawerLayout drawer;
     private LinearLayout navigationView;
@@ -22,7 +24,7 @@ public class ScreeningActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_screening);
-
+        findViewById(R.id.main_ch).setOnClickListener(this);
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         navigationView = (LinearLayout) findViewById(R.id.nav_view);
         mFrameTv = (TextView) findViewById(R.id.screenTv);
@@ -54,5 +56,14 @@ public class ScreeningActivity extends AppCompatActivity {
     }
 
 
-
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.main_ch:
+                startActivity(new Intent(this, MainActivity.class));
+                break;
+            default:
+                break;
+        }
+    }
 }

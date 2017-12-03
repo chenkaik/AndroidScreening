@@ -8,4 +8,9 @@
     <color name="c">#FFFFFF</color>
     <color name="colF4F4F4">#F4F4F4</color>
     <color name="col666666">#666666</color>
+
+    <color name="gray_text">#909497</color>
+    <color name="white">#ffffffff</color>
+    <color name="patrol_finish_blue">#44B2FE</color>
+    <color name="blue_text">#3cafff</color>
 </resources>
