@@ -1,13 +1,12 @@
 package com.example.study.android.androidscreening.adapter;
 
 import android.content.Context;
-import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
-import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.study.android.androidscreening.R;
 import com.example.study.android.androidscreening.model.AttrList;
@@ -19,7 +18,7 @@ import java.util.List;
 
 
 public class ScreeningListAdapter extends SimpleBaseAdapter<AttrList.Attr.Vals> {
-    private List<AttrList.Attr.Vals> chickList;
+    private List<AttrList.Attr.Vals> chickList; // 存放已选中的值
 
     public ScreeningListAdapter(Context context, List<AttrList.Attr.Vals> data) {
         super(context, data);
@@ -40,7 +39,7 @@ public class ScreeningListAdapter extends SimpleBaseAdapter<AttrList.Attr.Vals> 
 
         brandCb.setVisibility(topBrand.isChick() ? View.VISIBLE : View.GONE);
         mubTv.setText((topBrand.getV()));
-        brandCb.setChecked(topBrand.isChick());
+        brandCb.setChecked(topBrand.isChick()); // 设置是否选中
 
         brandLay.setOnClickListener(new OnClickListenerWrapper() {
             @Override
@@ -51,8 +50,8 @@ public class ScreeningListAdapter extends SimpleBaseAdapter<AttrList.Attr.Vals> 
                 notifyDataSetChanged();
 
                 if (isSelect) {
-                    if (removeDuplicate(getAdapterChick()).size() >= 9) {
-                        // ToastUtil.showSingleToast("抱歉，最多只能选择9个");
+                    if (removeDuplicate(getAdapterChick()).size() >= 10) {
+                        Toast.makeText(context, "抱歉，最多只能选择10个", Toast.LENGTH_SHORT).show();
                         topBrand.setChick(false);
                         notifyDataSetChanged();
                         return;
@@ -63,7 +62,9 @@ public class ScreeningListAdapter extends SimpleBaseAdapter<AttrList.Attr.Vals> 
                 } else {
                     removeDuplicate(getAdapterChick()).remove(topBrand);
                 }
-                mBack.setupClick();
+                if (mBack != null){
+                    mBack.setupClick(); // 表示已经将值回传过去了
+                }
             }
 
         });
@@ -79,6 +80,10 @@ public class ScreeningListAdapter extends SimpleBaseAdapter<AttrList.Attr.Vals> 
         return list;
     }
 
+    /**
+     * 获取已选中的值
+     * @return
+     */
     public List<AttrList.Attr.Vals> getAdapterChick() {
         return chickList;
     }

@@ -14,9 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * ListView的适配器
  */
 
 public class RightSideslipLayAdapter extends SimpleBaseAdapter<AttrList.Attr> {
+
+    private RightSideslipLayChildAdapter mChildAdapter;
 
     public RightSideslipLayAdapter(Context context, List<AttrList.Attr> data) {
         super(context, data);
@@ -37,7 +40,8 @@ public class RightSideslipLayAdapter extends SimpleBaseAdapter<AttrList.Attr> {
         itemFrameGv.setVisibility(View.VISIBLE);
         AttrList.Attr mAttr = getData().get(position);
         brand.setText(mAttr.getKey());
-        selectTv.setText(mAttr.getShowStr());
+        //selectTv.setText(mAttr.getShowStr());
+        //TODO 可设置CheckBox全选按钮的监听
         if (mAttr.getVals() != null) {
             convertView.setVisibility(View.VISIBLE);
             if (mAttr.isoPen()) {
@@ -47,7 +51,7 @@ public class RightSideslipLayAdapter extends SimpleBaseAdapter<AttrList.Attr> {
                 layoutItem.setTag(itemFrameGv);
             } else {
                 fillLv2CateViews(mAttr, mAttr.getVals().subList(0, 0), itemFrameGv);
-                selectTv.setText(mAttr.getShowStr());
+                //selectTv.setText(mAttr.getShowStr());
                 selectTv.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.arrow_down_prodcatelist, 0);
                 layoutItem.setTag(itemFrameGv);
                 selectTv.setVisibility(View.VISIBLE);
@@ -61,44 +65,66 @@ public class RightSideslipLayAdapter extends SimpleBaseAdapter<AttrList.Attr> {
     }
 
     private void fillLv2CateViews(final AttrList.Attr mAttr, List<AttrList.Attr.Vals> list,AutoMeasureHeightGridView childLvGV) {
-        final RightSideslipLayChildAdapter mChildAdapter;
-        if (mAttr.getSelectVals() == null) {
+        if (null == mAttr.getSelectVals()) {
             mAttr.setSelectVals(new ArrayList<AttrList.Attr.Vals>());
         }
         if (childLvGV.getAdapter() == null) {
-            mChildAdapter = new RightSideslipLayChildAdapter(context, list, mAttr.getSelectVals()); // 传九宫格值与选中的值
+            mChildAdapter = new RightSideslipLayChildAdapter(context, list, mAttr.getSelectVals()); // 传当前项九宫格值与已选中的值
             childLvGV.setAdapter(mChildAdapter);
         } else {
             // 不为null时重新刷新数据
             mChildAdapter = (RightSideslipLayChildAdapter) childLvGV.getAdapter();
             mAttr.setSelectVals(mAttr.getSelectVals());
+            //Toast.makeText(context, "---" + mAttr.getSelectVals().size(), Toast.LENGTH_SHORT).show();
             mChildAdapter.setSeachData(mAttr.getSelectVals());
             mChildAdapter.replaceAll(list);
         }
 
         mChildAdapter.setSlidLayFrameChildCallBack(new RightSideslipLayChildAdapter.SlidLayFrameChildCallBack() {
             @Override
-            public void CallBackSelectData( List<AttrList.Attr.Vals> seachData) {
-                // 等待回调时执行
+            public void CallBackSelectData(List<AttrList.Attr.Vals> seachData) { // checkbox选中与取消选中的回调
+                // 先拼接选中的值然后再进行设置
                 mAttr.setShowStr(setupSelectStr(seachData));
-                mAttr.setSelectVals(seachData); // 设置当前选中的数据
+                mAttr.setSelectVals(seachData); // 赋值当前选中的数据
                 notifyDataSetChanged(); // 更新适配器
-                selechDataCallBack.setupAttr(setupSelectDataStr(seachData), mAttr.getKey()); // 进行回调
-
+                if (selechDataCallBack != null){
+                    selechDataCallBack.setupAttr(seachData, mAttr.getKey()); // 进行回调最终选中的值
+                }
             }
         });
 
 
+        // 回调popuwindow监听
         mChildAdapter.setShowPopCallBack(new RightSideslipLayChildAdapter.ShowPopCallBack() {
             @Override
             public void setupShowPopCallBack(List<AttrList.Attr.Vals> seachData) {
-                mAttr.setSelectVals(seachData); // 选中的值
-                mAttr.setShowStr(setupSelectStr(seachData));
-                mSelechMoreCallBack.setupMore(seachData); // 回调popuwindow
+                mAttr.setSelectVals(seachData); // 设置选中的值
+                mAttr.setShowStr(setupSelectStr(seachData)); // 拼接选中的显示
+                if (mSelechMoreCallBack != null){
+                    mSelechMoreCallBack.setupMore(seachData); // 回调popuwindow
+                }
             }
         });
 
     }
+
+
+    OnClickListenerWrapper onClickListener = new OnClickListenerWrapper() {
+        @Override
+        protected void onSingleClick(View v) {
+            int id = v.getId();
+            if (id == R.id.item_select_lay) {
+                AutoMeasureHeightGridView childLv3GV = (AutoMeasureHeightGridView) v.getTag();
+                int pos = (int) childLv3GV.getTag();
+                AttrList.Attr itemData = data.get(pos);
+                boolean isSelect = !itemData.isoPen();
+                // 再将当前选择CB的实际状态
+                itemData.setIsoPen(isSelect);
+                notifyDataSetChanged(); // 刷新
+            }
+        }
+    };
+
 
     /**
      * 拼接选中的显示
@@ -139,25 +165,18 @@ public class RightSideslipLayAdapter extends SimpleBaseAdapter<AttrList.Attr> {
 
     }
 
-
-    OnClickListenerWrapper onClickListener = new OnClickListenerWrapper() {
-        @Override
-        protected void onSingleClick(View v) {
-            int id = v.getId();
-            if (id == R.id.item_select_lay) {
-                AutoMeasureHeightGridView childLv3GV = (AutoMeasureHeightGridView) v.getTag();
-                int pos = (int) childLv3GV.getTag();
-                AttrList.Attr itemdata = data.get(pos);
-                boolean isSelect = !itemdata.isoPen();
-                // 再将当前选择CB的实际状态
-                itemdata.setIsoPen(isSelect);
-                notifyDataSetChanged();
-            }
+    public void refresh(){
+        if (mChildAdapter != null){
+            mChildAdapter.refresh();
+            //Toast.makeText(context, "" + mChildAdapter.seachData.size(), Toast.LENGTH_SHORT).show();
         }
-    };
+        notifyDataSetChanged();
+    }
 
+
+    // 选中的接口
     public interface SelechDataCallBack {
-        void setupAttr(List<String> mSelectData, String key);
+        void setupAttr(List<AttrList.Attr.Vals> mSelectData, String key);
     }
 
     public SelechDataCallBack selechDataCallBack;
@@ -169,6 +188,7 @@ public class RightSideslipLayAdapter extends SimpleBaseAdapter<AttrList.Attr> {
 
 
 
+    // 查看更多的接口
     public interface SelechMoreCallBack {
         void setupMore(List<AttrList.Attr.Vals> da);
     }

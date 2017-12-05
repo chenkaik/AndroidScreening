@@ -10,7 +10,6 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import com.example.study.android.androidscreening.R;
 import com.example.study.android.androidscreening.adapter.RightSideslipLayAdapter;
@@ -35,6 +34,8 @@ public class RightSideslipLay extends RelativeLayout {
             "{\"single_check\": 0,\"key\": \"灭蚊器类型\", \"vals\": [{ \"val\": \"光触媒灭蚊器\"}]}," +
             "{\"single_check\": 0,\"key\": \"个数\", \"vals\": [{\"val\": \"1个\"},{\"val\": \"2个\"},{\"val\": \"3个\"},{\"val\": \"4个\"},{\"val\": \"5个\"},{\"val\": \"5个以上\"},{\"val\": \"10个以上\"}]},{ \"single_check\": 0, \"key\": \"型号\",\"vals\": [{\"val\": \"SI23\" },{\"val\": \"SI23\" },{\"val\": \"SI343\" },{\"val\": \"SI563\" },{\"val\": \"Sgt23\" }]}]}";
 
+    private List<AttrList.Attr.Vals> list = new ArrayList<>();
+
     public RightSideslipLay(Context context) {
         super(context);
         mCtx = context;
@@ -44,10 +45,10 @@ public class RightSideslipLay extends RelativeLayout {
     private void inflateView() {
         View.inflate(getContext(), R.layout.include_right_sideslip_layout, this);
         selectList = (ListView) findViewById(R.id.selsectFrameLV);
-        backBrand = (ImageView) findViewById(R.id.select_brand_back_im);
-        resetBrand = (Button) findViewById(R.id.fram_reset_but);
+        backBrand = (ImageView) findViewById(R.id.select_brand_back_im); // 返回主页面
+        resetBrand = (Button) findViewById(R.id.fram_reset_but); // 重置按钮
         mRelateLay = (RelativeLayout) findViewById(R.id.select_frame_lay); // 整个侧滑布局
-        okBrand = (Button) findViewById(R.id.fram_ok_but);
+        okBrand = (Button) findViewById(R.id.fram_ok_but); // 确定按钮
         resetBrand.setOnClickListener(mOnClickListener);
         okBrand.setOnClickListener(mOnClickListener);
         backBrand.setOnClickListener(mOnClickListener);
@@ -59,7 +60,7 @@ public class RightSideslipLay extends RelativeLayout {
 
     private List<AttrList.Attr> setUpBrandList(List<AttrList.Attr> mAttrList) {
         if ("品牌".equals(mAttrList.get(0).getKey())) {
-            ValsData = mAttrList.get(0).getVals(); // 这个地方保存了原始的数据
+            ValsData = mAttrList.get(0).getVals(); // 这个地方保存了原始的第一项数据
             mAttrList.get(0).setVals(getValsDatas(mAttrList.get(0).getVals()));
         }
         return mAttrList;
@@ -77,20 +78,25 @@ public class RightSideslipLay extends RelativeLayout {
         }
         slidLayFrameAdapter.setAttrCallBack(new RightSideslipLayAdapter.SelechDataCallBack() {
             @Override
-            public void setupAttr(List<String> mSelectData, String key) {
-                // 回调结果选中的名字
-                for (String s : mSelectData){
-                    Toast.makeText(mCtx, mSelectData.size() + " " + key + " " + s, Toast.LENGTH_SHORT).show();
+            public void setupAttr(List<AttrList.Attr.Vals> mSelectData, String key) {
+//                for (AttrList.Attr.Vals s : mSelectData){
+                    //Toast.makeText(mCtx, "当前选中个数" + mSelectData.size(), Toast.LENGTH_SHORT).show();
+//                }
+                if ("品牌".equals(key)){
+                    list.clear();
+                    list.addAll(mSelectData);
                 }
             }
         });
 
-        slidLayFrameAdapter.setMoreCallBack(new RightSideslipLayAdapter.SelechMoreCallBack() { // 回调显示popuwindow
+        // 回调显示popupwindow
+        slidLayFrameAdapter.setMoreCallBack(new RightSideslipLayAdapter.SelechMoreCallBack() {
 
             @Override
             public void setupMore(List<AttrList.Attr.Vals> mSelectData) {
                 getPopupWindow(mSelectData);
-                mDownMenu.setOnMeanCallBack(meanCallBack);
+
+                //mDownMenu.setOnMeanCallBack(meanCallBack);
             }
         });
 
@@ -105,15 +111,22 @@ public class RightSideslipLay extends RelativeLayout {
                     ((AttrList.Attr) attr.getAttr().get(0)).setVals(getValsDatas(mBrandData));
                     ((AttrList.Attr) attr.getAttr().get(0)).setShowStr(str);
                 }
-                slidLayFrameAdapter.replaceAll(attr.getAttr());
+                list.clear();
+                for (int i = 0; i< mBrandData.size(); i++){
+                    if (mBrandData.get(i).isChick()){
+                        list.add(mBrandData.get(i));
+                        ((AttrList.Attr) attr.getAttr().get(0)).getSelectVals().add(mBrandData.get(i));
+                    }
+                }
+//                slidLayFrameAdapter.replaceAll(attr.getAttr());
+                slidLayFrameAdapter.notifyDataSetChanged();
             }
-
             dismissMenuPop();
         }
     };
 
     /**
-     * 改变的是集合里面的值
+     * 改变的是集合里面的值 添加查看更多
      * @param mBrandData
      * @return
      */
@@ -142,9 +155,28 @@ public class RightSideslipLay extends RelativeLayout {
         protected void onSingleClick(View v) {
             switch (v.getId()) {
                 case R.id.fram_reset_but:
+                    if (null != attr.getAttr()){
+                        List<AttrList.Attr> ll = attr.getAttr();
+                        for (int i = 0; i < ll.size(); i++){
+                            List<AttrList.Attr.Vals> select = ll.get(i).getSelectVals();
+                            if (!select.isEmpty() && select.size() > 0){
+                                for (AttrList.Attr.Vals aav : select){
+                                    if (aav.isChick()){
+                                        aav.setChick(false);
+                                    }
+                                }
+                                select.clear();
+                            }
+                        }
+                        list.clear();
+                        slidLayFrameAdapter.refresh();
+                    }
+
+                    break;
                 case R.id.select_brand_back_im:
                 case R.id.fram_ok_but:
-                    menuCallBack.setupCloseMean();
+                    menuCallBack.setupCloseMean(list);
+                    //slidLayFrameAdapter.notifyDataSetChanged();
                     break;
             }
         }
@@ -180,6 +212,7 @@ public class RightSideslipLay extends RelativeLayout {
     public RightSideslipChildLay mDownMenu;
 
     protected void initPopuptWindow(List<AttrList.Attr.Vals> mSelectData) {
+        // 上下文  初始化第一项的数据  已选中的数据
         mDownMenu = new RightSideslipChildLay(getContext(), ValsData, mSelectData);
         if (mMenuPop == null) {
             mMenuPop = new PopupWindow(mDownMenu, LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT);
@@ -195,13 +228,15 @@ public class RightSideslipLay extends RelativeLayout {
                 dismissMenuPop();
             }
         });
+
+        mDownMenu.setOnMeanCallBack(meanCallBack);
     }
 
 
     private CloseMenuCallBack menuCallBack;
 
     public interface CloseMenuCallBack {
-        void setupCloseMean();
+        void setupCloseMean(List<AttrList.Attr.Vals> mSelectData);
     }
 
     public void setCloseMenuCallBack(CloseMenuCallBack menuCallBack) {

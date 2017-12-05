@@ -24,7 +24,7 @@
             android:ellipsize="end"
             android:textColor="#2A2A2A"
             android:textSize="28px"
-            android:text="哈哈"/>
+            android:text=""/>
 
         <TextView
             android:id="@+id/item_selectTv"
@@ -36,7 +36,7 @@
             android:drawablePadding="3px"
             android:textColor="#fb4747"
             android:textSize="20px"
-            android:text="嘿嘿"/>
+            android:text=""/>
 
     </LinearLayout>
 
